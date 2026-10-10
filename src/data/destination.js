@@ -1,4 +1,8 @@
 
+import cox from "../assets/Rectangle 1.png";
+import sundarban from "../assets/sundorbon.png";
+import srimanglar from "../assets/Sreemongol.png";
+
 export const destinations = [
     {
         id: "cox",
@@ -6,10 +10,10 @@ export const destinations = [
         name: "Cox's Bazar",
         subtitle: "Discover the world's longest sea beach",
         description:
-            "Enjoy the beautiful sea beach, Marine Drive, and amazing sunsets.",
+            "Cox's Bazar is famous for its long natural sandy beach, Marine Drive, and beautiful sunsets.",
         duration: "3 Days / 2 Nights",
         price: 5000,
-        image: "https://ibb.co.com/93qwV9hs", // এখানে পরে নিজের image import করবে
+        image: cox,
         highlights: ["Sea Beach", "Marine Drive", "Sunset"],
     },
     {
@@ -18,10 +22,10 @@ export const destinations = [
         name: "Sundarbans",
         subtitle: "Explore the world's largest mangrove forest",
         description:
-            "Discover the mangrove forest, river cruises, and beautiful wildlife.",
+            "Discover mangrove forests, river cruises, and the natural beauty of the Sundarbans.",
         duration: "3 Days / 2 Nights",
         price: 6500,
-        image: "https://ibb.co.com/jvV77QNm",
+        image: sundarban,
         highlights: ["Mangrove Forest", "River Cruise", "Wildlife"],
     },
     {
@@ -30,10 +34,10 @@ export const destinations = [
         name: "Sreemangal",
         subtitle: "Experience the beauty of tea gardens",
         description:
-            "Enjoy green tea gardens, peaceful hills, and beautiful nature.",
+            "Enjoy beautiful tea gardens, green hills, and peaceful natural scenery in Sreemangal.",
         duration: "2 Days / 1 Night",
         price: 3500,
-        image: "https://ibb.co.com/Kz8K6c25",
+        image: srimanglar,
         highlights: ["Tea Gardens", "Green Hills", "Nature"],
     },
 ];
