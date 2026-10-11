@@ -13,7 +13,7 @@ export const destinations = [
             "Cox's Bazar is famous for its long natural sandy beach, Marine Drive, and beautiful sunsets.",
         duration: "3 Days / 2 Nights",
         price: 5000,
-        image: cox,
+        image: cox,   
         highlights: ["Sea Beach", "Marine Drive", "Sunset"],
     },
     {
