@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 
 import { destinations } from "../data/destination";
+import { useEffect } from "react";
+
 
 const CARDS_PER_PAGE = 4;
 
@@ -26,6 +28,22 @@ export default function DestinationSlider() {
         currentPage * CARDS_PER_PAGE,
         (currentPage + 1) * CARDS_PER_PAGE
     );
+    // automatic slide
+    useEffect(() => {
+        if (destinations.length <= 1) return;
+
+        const timer = setInterval(() => {
+            setActiveIndex((previousIndex) => {
+                const nextIndex = (previousIndex + 1) % destinations.length;
+
+                setCurrentPage(Math.floor(nextIndex / CARDS_PER_PAGE));
+
+                return nextIndex;
+            });
+        }, 3000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     // যেই destination-এর Booking button চাপবে, সেটির details route খুলবে।
     // Login না থাকলে ProtectedRoute Login page-এ পাঠাবে।
