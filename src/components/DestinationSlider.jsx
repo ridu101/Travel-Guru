@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -27,6 +26,17 @@ export default function DestinationSlider() {
         currentPage * CARDS_PER_PAGE,
         (currentPage + 1) * CARDS_PER_PAGE
     );
+
+    // যেই destination-এর Booking button চাপবে, সেটির details route খুলবে।
+    // Login না থাকলে ProtectedRoute Login page-এ পাঠাবে।
+    const handleBook = (destination) => {
+        if (!destination?.slug) {
+            console.error("Destination slug is missing:", destination);
+            return;
+        }
+
+        navigate(`/destination/${destination.slug}`);
+    };
 
     const selectDestination = (index) => {
         setActiveIndex(index);
@@ -64,7 +74,6 @@ export default function DestinationSlider() {
 
     return (
         <main className="relative min-h-screen overflow-hidden bg-slate-900 text-white">
-
             {/* Background image */}
             {activeDestination.image && (
                 <img
@@ -84,10 +93,8 @@ export default function DestinationSlider() {
 
             {/* Main content */}
             <section className="relative z-10 mx-auto flex min-h-screen max-w-362.5 flex-col justify-center px-6 pb-12 pt-32 lg:px-12">
-
                 <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.4fr] lg:gap-12">
-
-                    {/* Destination information */}
+                    {/* Active destination information */}
                     <div className="max-w-xl">
                         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#F9A51A]">
                             Explore Bangladesh
@@ -115,24 +122,20 @@ export default function DestinationSlider() {
                             </span>
                         </div>
 
+                        {/* Book the currently selected destination */}
                         <button
                             type="button"
-                            onClick={() =>
-                                navigate(
-                                    `/destination/${activeDestination.slug}`
-                                )
-                            }
+                            onClick={() => handleBook(activeDestination)}
                             className="mt-6 inline-flex items-center gap-3 rounded-md bg-[#F9A51A] px-6 py-3 font-bold text-black transition hover:bg-amber-300"
                         >
-                            Booking
+                            Book Now
                             <ArrowRight size={19} />
                         </button>
                     </div>
 
-                    {/* Four destination cards */}
+                    {/* Destination cards */}
                     <div id="destinations">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
                             {visibleDestinations.map((destination) => {
                                 const index = destinations.findIndex(
                                     (item) => item.id === destination.id
@@ -141,12 +144,9 @@ export default function DestinationSlider() {
                                 const isActive = activeIndex === index;
 
                                 return (
-                                    <button
+                                    <div
                                         key={destination.id}
-                                        type="button"
-                                        onClick={() => selectDestination(index)}
-                                        aria-pressed={isActive}
-                                        className={`group relative h-56 overflow-hidden rounded-2xl border-[3px] text-left transition-all duration-300 sm:h-64 lg:h-60 xl:h-64 ${isActive
+                                        className={`group relative h-64 overflow-hidden rounded-2xl border-[3px] transition-all duration-300 sm:h-64 lg:h-60 xl:h-64 ${isActive
                                                 ? "-translate-y-1 border-[#F9A51A]"
                                                 : "border-transparent hover:-translate-y-1 hover:border-white/60"
                                             }`}
@@ -165,10 +165,19 @@ export default function DestinationSlider() {
                                         )}
 
                                         {/* Card overlay */}
-                                        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/25 to-black/10" />
+                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/90 via-black/25 to-black/10" />
+
+                                        {/* Select destination */}
+                                        <button
+                                            type="button"
+                                            onClick={() => selectDestination(index)}
+                                            aria-pressed={isActive}
+                                            aria-label={`Show ${destination.name}`}
+                                            className="absolute inset-0 z-0 h-full w-full"
+                                        />
 
                                         {/* Card title and details */}
-                                        <div className="absolute inset-x-0 bottom-0 p-4">
+                                        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4">
                                             <h2 className="font-[Impact,sans-serif] text-xl uppercase leading-tight sm:text-lg lg:text-xl">
                                                 {destination.name}
                                             </h2>
@@ -176,11 +185,14 @@ export default function DestinationSlider() {
                                             <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/80">
                                                 {destination.subtitle}
                                             </p>
+
+                                            <p className="mt-1 text-xs font-medium text-[#F9A51A]">
+                                                From ৳{destination.price}
+                                            </p>
                                         </div>
-                                    </button>
+                                    </div>
                                 );
                             })}
-
                         </div>
 
                         {/* Page information */}
@@ -206,6 +218,7 @@ export default function DestinationSlider() {
                                 {currentPage >= totalPages - 1
                                     ? "All Destinations Shown"
                                     : "Show More"}
+
                                 {currentPage < totalPages - 1 && (
                                     <ArrowRight size={17} />
                                 )}
@@ -238,7 +251,6 @@ export default function DestinationSlider() {
                         <ChevronRight size={22} />
                     </button>
                 </div>
-
             </section>
         </main>
     );

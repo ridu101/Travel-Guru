@@ -1,245 +1,257 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+// import { FcFeedback, FcGoogle } from "react-icons/fc";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import {
-  Eye,
-  EyeOff,
-  Mail,
-  LockKeyhole,
-  Compass,
-  ArrowRight,
+    Mail,
+    LockKeyhole,
+    Eye,
+    EyeOff,
+    
 } from "lucide-react";
 
 import { useAuth } from "../provider/AuthProvider";
+// import fbIcon from "../assets/fb.png"
+import { FaFacebook, FaGoogle } from "react-icons/fa";
 
-function getAuthError(error) {
-  const messages = {
-    "auth/invalid-credential":
-      "Email অথবা password সঠিক নয়।",
-    "auth/invalid-email":
-      "সঠিক email address দাও।",
-    "auth/user-disabled":
-      "এই account বর্তমানে disabled।",
-    "auth/too-many-requests":
-      "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করো।",
-    "auth/popup-closed-by-user":
-      "Google sign-in window বন্ধ করা হয়েছে।",
-    "auth/popup-blocked":
-      "Browser popup block করেছে। Popup allow করে আবার চেষ্টা করো।",
-    "auth/unauthorized-domain":
-      "Firebase Console-এ এই domain authorize করতে হবে।",
-    "auth/network-request-failed":
-      "Internet connection পরীক্ষা করো।",
-  };
+function getErrorMessage(error) {
+    const messages = {
+        "auth/invalid-credential": "Email অথবা password সঠিক নয়।",
+        "auth/user-not-found": "এই email দিয়ে কোনো account পাওয়া যায়নি।",
+        "auth/wrong-password": "Password সঠিক নয়।",
+        "auth/invalid-email": "সঠিক email address দাও।",
+        "auth/popup-closed-by-user": "Google login বাতিল করা হয়েছে।",
+        "auth/popup-blocked": "Browser popup block করেছে। Popup allow করে আবার চেষ্টা করো।",
+        "auth/unauthorized-domain": "Firebase Console-এর Authorized domains-এ এই domain যোগ করো।",
+        "auth/operation-not-allowed": "Firebase Console-এ এই sign-in method enable করো।",
+        "auth/network-request-failed": "Internet connection পরীক্ষা করো।",
+        "auth/too-many-requests": "অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করো।",
+    };
 
-  return (
-    messages[error.code] ||
-    "অনুরোধ সম্পন্ন হয়নি। আবার চেষ্টা করো।"
-  );
+    return messages[error?.code] || "Login করা যায়নি। আবার চেষ্টা করো।";
 }
 
 export default function Login() {
-  const navigate = useNavigate();
-  const { login, googleLogin, resetPassword, loading } = useAuth();
+    const { login, googleLogin, resetPassword } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [remember, setRemember] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setMessage("");
-    setBusy(true);
+    const redirectAfterLogin = () => {
+        const destination = location.state?.from;
 
-    try {
-      await login(email, password, remember);
-      navigate("/");
-    } catch (error) {
-      setMessage(getAuthError(error));
-    } finally {
-      setBusy(false);
-    }
-  };
+        if (destination?.pathname?.startsWith("/destination/")) {
+            navigate(
+                `${destination.pathname}${destination.search || ""}${destination.hash || ""}`,
+                { replace: true }
+            );
+        } else {
+            navigate("/", { replace: true });
+        }
+    };
 
-  const handleGoogleLogin = async () => {
-    setMessage("");
-    setBusy(true);
+    const handleEmailLogin = async (event) => {
+        event.preventDefault();
+        setSubmitting(true);
 
-    try {
-      await googleLogin();
-      navigate("/");
-    } catch (error) {
-      setMessage(getAuthError(error));
-    } finally {
-      setBusy(false);
-    }
-  };
+        try {
+            await login(email, password, remember);
+            redirectAfterLogin();
+        } catch (error) {
+            await Swal.fire({
+                title: "Login Failed",
+                text: getErrorMessage(error),
+                icon: "error",
+                confirmButtonColor: "#F9A51A",
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-  const handleForgotPassword = async () => {
-    setMessage("");
+    const handleGoogleLogin = async () => {
+        setSubmitting(true);
 
-    if (!email.trim()) {
-      setMessage("আগে Email address লিখো।");
-      return;
-    }
+        try {
+            await googleLogin();
+            redirectAfterLogin();
+        } catch (error) {
+            await Swal.fire({
+                title: "Google Login Failed",
+                text: getErrorMessage(error),
+                icon: "error",
+                confirmButtonColor: "#F9A51A",
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-    setBusy(true);
+    const handleForgotPassword = async () => {
+        if (!email.trim()) {
+            await Swal.fire(
+                "Email required",
+                "প্রথমে email field-এ তোমার email লিখো।",
+                "info"
+            );
+            return;
+        }
 
-    try {
-      await resetPassword(email);
-      setMessage(
-        "যদি এই email-এর account থাকে, password reset link পাঠানো হবে। Inbox এবং spam folder দেখো।"
-      );
-    } catch (error) {
-      setMessage(getAuthError(error));
-    } finally {
-      setBusy(false);
-    }
-  };
+        try {
+            await resetPassword(email);
 
-  const disabled = busy || loading;
+            await Swal.fire(
+                "Check Your Email",
+                "Password reset link তোমার email-এ পাঠানো হয়েছে।",
+                "success"
+            );
+        } catch (error) {
+            await Swal.fire(
+                "Could Not Send Email",
+                getErrorMessage(error),
+                "error"
+            );
+        }
+    };
 
-  return (
-    <div>
-      <div className="mb-8">
-        <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-[#D88700]">
-          <Compass size={27} />
-        </span>
+    const inputClass =
+        "w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-12 text-gray-800 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100";
 
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#D88700]">
-          Welcome back
-        </p>
+    return (
+        <div className="w-full max-w-md">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[3px] text-amber-600">
+                Welcome back
+            </p>
 
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Sign in to your account
-        </h1>
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">
+                Login to Travel Guru
+            </h1>
 
-        <p className="mt-3 text-sm leading-6 text-slate-500">
-          Your next adventure is just a step away.
-        </p>
-      </div>
+            <p className="mb-7 text-sm text-gray-500">
+                Sign in to continue planning your next trip.
+            </p>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label htmlFor="login-email" className="mb-2 block text-sm font-semibold text-slate-700">
-            Email address
-          </label>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
 
-          <div className="relative">
-            <Mail size={19} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                        className={inputClass}
+                        type="email"
+                        placeholder="Email address"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        autoComplete="email"
+                        required
+                    />
+                </div>
 
-            <input
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#F9A51A] focus:bg-white focus:ring-4 focus:ring-amber-100"
-            />
-          </div>
+                <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+
+                    <input
+                        className={inputClass}
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        autoComplete="current-password"
+                        required
+                    />
+
+                    <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label="Toggle password visibility"
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 text-sm">
+                    <label className="flex cursor-pointer items-center gap-2 text-gray-600">
+                        <input
+                            type="checkbox"
+                            className="checkbox checkbox-warning checkbox-sm"
+                            checked={remember}
+                            onChange={(event) => setRemember(event.target.checked)}
+                        />
+                        Remember me
+                    </label>
+
+                    <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="font-semibold text-amber-700 hover:underline"
+                    >
+                        Forgot password?
+                    </button>
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full rounded-xl bg-[#F9A51A] py-3 font-bold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {submitting ? "Please wait..." : "Login"}
+                </button>
+            </form>
+
+            <div className="my-5 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs text-gray-400">OR CONTINUE WITH</span>
+                <div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <div className="">
+                {/* Google Login */}
+                <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={submitting}
+                    className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-800 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 mb-2"
+                >
+                    <FaGoogle size={20} />
+
+                    <span>
+                        {submitting ? "Please wait..." : "Continue with Google"}
+                    </span>
+                </button>
+
+                {/* Facebook Login */}
+                <button
+                    type="button"
+                    // onClick={handleFacebookLogin}
+                    disabled={submitting}
+                    className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-800 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <FaFacebook size={20} />
+
+                    <span>
+                        {submitting ? "Please wait..." : "Continue With Facebook"}
+                    </span>
+                </button>
+            </div>
+           
+           
+        
+   
+           
+            <p className="mt-6 text-center text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link
+                    to="/auth/register"
+                    className="font-bold text-amber-600 hover:underline"
+                >
+                    Create Account
+                </Link>
+            </p>
         </div>
-
-        <div>
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <label htmlFor="login-password" className="text-sm font-semibold text-slate-700">
-              Password
-            </label>
-
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              disabled={disabled}
-              className="text-xs font-semibold text-[#B87500] hover:text-black disabled:opacity-50"
-            >
-              Forgot password?
-            </button>
-          </div>
-
-          <div className="relative">
-            <LockKeyhole size={19} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-
-            <input
-              id="login-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#F9A51A] focus:bg-white focus:ring-4 focus:ring-amber-100"
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-            >
-              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-            </button>
-          </div>
-        </div>
-
-        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(event) => setRemember(event.target.checked)}
-            className="h-4 w-4 accent-[#F9A51A]"
-          />
-          Remember me
-        </label>
-
-        {message && (
-          <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm leading-6 text-amber-800">
-            {message}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={disabled}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F9A51A] px-5 py-3.5 font-bold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy ? "Please wait..." : "Sign In"}
-          {!busy && <ArrowRight size={19} />}
-        </button>
-
-        <div className="relative py-1">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-white px-4 text-xs text-slate-400">
-              OR CONTINUE WITH
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={disabled}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
-        >
-          <span className="flex h-5 w-5 items-center justify-center font-bold text-base">
-            G
-          </span>
-          Continue with Google
-        </button>
-      </form>
-
-      <p className="mt-7 text-center text-sm text-slate-500">
-        Don't have an account?{" "}
-        <Link to="/auth/register" className="font-bold text-[#B87500] hover:text-black">
-          Create account
-        </Link>
-      </p>
-    </div>
-  );
+    );
 }

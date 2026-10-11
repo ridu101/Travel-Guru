@@ -22,6 +22,7 @@ import madhabkunda from "../assets/madhabkunda.jpg"
 import lawachara from "../assets/lawachara.jpg"
 import birishiri from "../assets/birishiri.jpg"
 import chandranath from "../assets/chandranath.jpg"
+import mainamati  from "../assets/moyanamati.jpg"
 
 
 

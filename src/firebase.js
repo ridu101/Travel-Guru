@@ -3,21 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    apiKey: "AIzaSyAECkBzOyt65Ytk5fQkw0mZ-ChNPWnA1io",
+    authDomain: "travel-guru-30834.firebaseapp.com",
+    projectId: "travel-guru-30834",
+    storageBucket: "travel-guru-30834.firebasestorage.app",
+    messagingSenderId: "191067323997",
+    appId: "1:191067323997:web:f5abfde6e80c7c3b7dd7b4",
 };
-
-const requiredValues = Object.values(firebaseConfig);
-
-if (requiredValues.some((value) => !value)) {
-  throw new Error(
-    "Firebase config missing. Check your .env.local file and restart Vite."
-  );
-}
 
 const app = initializeApp(firebaseConfig);
 
